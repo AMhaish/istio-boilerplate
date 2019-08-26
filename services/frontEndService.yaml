@@ -1,0 +1,36 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: fe
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - flow-gateway
+  http:
+  - match:
+    - uri:
+        exact: /
+    - uri:
+        prefix: /assets
+    - uri:
+        prefix: /favicon
+    - uri:
+        prefix: /img
+    - uri:
+        prefix: /static
+    - uri:
+        exact: /asset-manifest.json
+    - uri:
+        exact: /index.html
+    - uri:
+        exact: /manifest.json
+    - uri:
+        prefix: /precache-manifest
+    - uri:
+        exact: /service-worker.js
+    route:
+    - destination:
+        host: fe
+        port:
+          number: 80

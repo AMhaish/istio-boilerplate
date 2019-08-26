@@ -1,0 +1,22 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: custom-auth-filter
+spec:
+  workloadLabels:
+    app: custom-auth
+  filters:
+  - listenerMatch:
+      portNumber: 80
+      listenerType: SIDECAR_INBOUND
+      listenerProtocol: HTTP
+    filterName: envoy.lua
+    filterType: HTTP
+    filterConfig:
+      inlineCode: |
+        function envoy_on_request(handle)
+            
+        end
+        function envoy_on_response(handle)
+            
+        end

@@ -1,0 +1,16 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: auth
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - flow-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /auth
+    route:
+    - destination:
+        host: auth
