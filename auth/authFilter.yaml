@@ -1,10 +1,10 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
-  name: custom-auth-filter
+  name: your-filter-name
 spec:
   workloadLabels:
-    app: custom-auth
+    app: service-1, service-2
   filters:
   - listenerMatch:
       portNumber: 80
@@ -14,9 +14,43 @@ spec:
     filterType: HTTP
     filterConfig:
       inlineCode: |
-        function envoy_on_request(handle)
-            
+        function process(request_handle)
+            request_handle:logInfo("Auth Processing...")
+            local auth_host = "auth-service.name-space.svc.cluster.local"
+            local cluster = "outbound|80||" .. auth_host
+            -- Build a request for our authentication service before passing request upstream
+            local authentication_request = {
+                [":method"] = "GET",
+                [":path"] = "/auth-service/validate-token",
+            }
+            authentication_request["Authorization"] = request_handle:headers():get("Authorization")
+            local response_headers, response_body = request_handle:httpCall(
+                cluster,
+                authentication_request,
+                "",
+                5000)
+            -- If we don't get a 204 from our Authentication service, reject the request
+            if tonumber(response_headers[":status"]) ~= 204 then
+                request_handle:logInfo("Auth Failed")
+                request_handle:respond(
+                                {[":status"] = response_headers[":status"]},
+                                response_body
+                        )
+            end
+            for header, value in pairs(response_headers) do
+                local set_header = header:lower():match("^set%-(.+)")
+                if set_header then
+                    request_handle:headers():replace(set_header, value)
+                else
+                    local unset_header = header:lower():match("^unset%-(.+)")
+                    if unset_header then
+                        request_handle:headers():remove(unset_header)
+                    end
+                end
+            end
+            request_handle:logInfo("Auth Processed")
         end
-        function envoy_on_response(handle)
-            
+        -- Called on the request path.
+        function envoy_on_request(request_handle)
+            process(request_handle)
         end
