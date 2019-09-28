@@ -6,7 +6,7 @@ spec:
   hosts:
   - "*"
   gateways:
-  - flow-gateway
+  - http-gateway
   http:
   - match:
     - uri:

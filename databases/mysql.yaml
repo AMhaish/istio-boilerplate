@@ -1,4 +1,15 @@
 apiVersion: v1
+kind: Secret
+metadata:
+   name: db-credentials
+type: Opaque
+data:
+  mysql-password: <encrypted password>
+  mysql-root-password: <encrypted password>
+  mysql-user: <encrypted user>
+  mysql-db: <encrypted database name>
+---
+apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: mysql-pv-volume
@@ -54,10 +65,29 @@ spec:
       containers:
       - image: mysql:5.6
         name: mysql
-        env:
+         env:
           # Use secret in real usage
-        - name: MYSQL_ROOT_PASSWORD
-          value: SorunPa$$w0rd
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: db-credentials
+                key: mysql-root-password
+          - name: MYSQL_DATABASE
+            valueFrom:
+              secretKeyRef:
+                name: db-credentials
+                key: mysql-db
+          - name: MYSQL_USER
+            valueFrom:
+              secretKeyRef:
+                name: db-credentials
+                key: mysql-user
+          - name: MYSQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: db-credentials
+                key: mysql-password
+        args: ["--default-authentication-plugin","mysql_native_password"]
         ports:
         - containerPort: 3306
           name: mysql

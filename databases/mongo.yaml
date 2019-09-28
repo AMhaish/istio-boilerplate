@@ -1,0 +1,98 @@
+##---
+# Storage account that the MongoDB will use
+---
+apiVersion: v1
+kind: StorageClass
+apiVersion: storage.k8s.io/v1beta1
+metadata:
+  name: fast
+provisioner: kubernetes.io/gce-pd
+parameters:
+  type: pd-ssd
+##---
+# Persistent Volume MongoDB will use
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongo-persistent-storage
+  labels:
+    type: local
+spec:
+  storageClassName: fast
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/mdata"
+##---
+# Persistent Volume Claim with its configuration
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-pv-claim
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+##---
+# Deploying headless service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+  labels:
+    name: mongo
+spec:
+  ports:
+  - port: 27017
+    targetPort: 27017
+  selector:
+    app: mongo
+  clusterIP: None
+##---
+# Creating the deployment
+---
+##---
+# Creating the deployment 
+---
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: mongo
+spec:
+  selector:
+    matchLabels:
+      app: mongo
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mongo
+        environment: test
+    spec:
+      containers:
+      - image: mongo
+        name: mongo
+        env:
+          # Use secret in real usage
+        - name: ME_CONFIG_MONGODB_ADMINUSERNAME
+          value: admin
+        - name: ME_CONFIG_MONGODB_ADMINPASSWORD
+          value: Pa$$w0rd
+        ports:
+        - containerPort: 27017
+          name: mongo
+        volumeMounts:
+        - name: mongo-persistent-storage
+          mountPath: /data/db
+      volumes:
+      - name: mongo-persistent-storage
+        persistentVolumeClaim:
+          claimName: mongo-pv-claim
