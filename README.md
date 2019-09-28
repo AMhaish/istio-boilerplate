@@ -21,11 +21,33 @@ After setting up the mesh and installing Istio on it, the configurations in this
 kubectl apply gateway.yaml
 ```
 The best order to execute the commands is to define gateway first, auth filter, database services and then virtual services. However apply commnad can be called again to updates the instance whenever you did changes on it.
+
+Whenever you want to list all resources in your mesh you can use the next command:
+```
+kubectl api-resources -o wide
+```
+
+Whenever you want to list the resources under specific resource type, you can use the next command (The command for listing all Virtual Services):
+```
+kubectl get virtualservice
+```
+
+Whenever you want to delete un-needed resoruce you can use the next command (For deleting a virtual service):
+```
+kubectl delete virtualservice <virtual-service-name>
+```
+
+And whenever you need to updated a service you can just apply it again and it will be automatically configured using your last applied configuration.
+
 ### Gateway configuration
---- Coming soon ---
+In this boilerplate I used a simple gateway that only allows inbound packets on port 80, and uses HTTP protocol, and will accepts connections from any hosts (The usage of star in host field)
+
 ### Virtual service configuration
---- Coming soon ---
+In this boilerplate I created two virtual services, one for books service. The virtual service will route any packets coming to gate way on port 80 with /books prefix to our books service. I have put in k8 examples folder some deployment code examples for different types of projects.
+The other virtual service I have created is for a React base front-end project accroding to the routes I have used (Suitable for the default build output of a React project).
+
 ### The authentication interceptor
---- Coming soon ---
+The authentication interceptor is an Envoy filter that will make a request to the auth service and its in her turn should append the response headers with set_header or unset_header to the filter will add these header or remove them from the request that will continue to the target service (That of course if the auth service didn't returned any status code other than 200 or that response from auth service will return to the caller as it is).
+
 ### Database instances
 --- Coming soon ---
