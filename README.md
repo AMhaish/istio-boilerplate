@@ -46,6 +46,13 @@ In this boilerplate I used a simple gateway that only allows inbound packets on 
 In this boilerplate I created two virtual services, one for books service. The virtual service will route any packets coming to gate way on port 80 with /books prefix to our books service. I have put in k8 examples folder some deployment code examples for different types of projects.
 The other virtual service I have created is for a React base front-end project accroding to the routes I have used (Suitable for the default build output of a React project).
 
+### Service Entries
+ServiceEntry enables adding additional entries into Istio’s internal service registry, so that auto-discovered services in the mesh can access/route to these manually specified services.
+
+A service entry describes the properties of a service (DNS name, VIPs, ports, protocols, endpoints). These services could be external to the mesh (e.g., web APIs) or mesh-internal services that are not part of the platform’s service registry (e.g., a set of VMs talking to services in Kubernetes).
+
+I added services entries with virtual services definitions for each service, where I am defining the allowed outside hosts for each virtual service. Please becareful that in case of using a wildcard pattern to select a group of domains then the resolution field should be NONE and not DNS.
+
 ### The authentication interceptor
 The authentication interceptor is an Envoy filter that will make a request to the auth service and its in her turn should append the response headers with set_header or unset_header to the filter will add these header or remove them from the request that will continue to the target service (That of course if the auth service didn't returned any status code other than 200 or that response from auth service will return to the caller as it is).
 

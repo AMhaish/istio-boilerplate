@@ -14,3 +14,23 @@ spec:
     route:
     - destination:
         host: books
+##---
+# Allowing access to outside through service entries    
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: books
+spec:
+  hosts:
+  - "*.googleapis.com"
+  - "*.google.com"
+  ports:
+  - number: 443
+    name: https
+    protocol: HTTPS
+  - number: 80
+    name: http
+    protocol: HTTP
+  resolution: NONE
+  location: MESH_EXTERNAL
