@@ -9,6 +9,9 @@ A volumes is defined in case there is a service that wants to store a presistant
 You can return to Kubernates website for further info [https://kubernetes.io/docs/home/]
 ### Virtual Service
 A Virtual service in Istio defines a set of traffic routing rules to the internal services.
+### Service Entries
+ServiceEntry enables adding additional entries into Istio’s internal service registry, so that auto-discovered services in the mesh can access/route to these manually specified services.
+A service entry describes the properties of a service (DNS name, VIPs, ports, protocols, endpoints). These services could be external to the mesh (e.g., web APIs) or mesh-internal services that are not part of the platform’s service registry (e.g., a set of VMs talking to services in Kubernetes).
 ### Gateway
 Istio gateway is a load balancer that describes a set of ports to be exposed, the type of protocol to use and SNI configuration.
 ### Authentication Interceptor
@@ -47,10 +50,6 @@ In this boilerplate I created two virtual services, one for books service. The v
 The other virtual service I have created is for a React base front-end project accroding to the routes I have used (Suitable for the default build output of a React project).
 
 ### Service Entries
-ServiceEntry enables adding additional entries into Istio’s internal service registry, so that auto-discovered services in the mesh can access/route to these manually specified services.
-
-A service entry describes the properties of a service (DNS name, VIPs, ports, protocols, endpoints). These services could be external to the mesh (e.g., web APIs) or mesh-internal services that are not part of the platform’s service registry (e.g., a set of VMs talking to services in Kubernetes).
-
 I added services entries with virtual services definitions for each service, where I am defining the allowed outside hosts for each virtual service. Please becareful that in case of using a wildcard pattern to select a group of domains then the resolution field should be NONE and not DNS.
 
 ### The authentication interceptor
