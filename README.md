@@ -51,6 +51,7 @@ The other virtual service I have created is for a React base front-end project a
 
 ### Service Entries
 I added services entries with virtual services definitions for each service, where I am defining the allowed outside hosts for each virtual service. Please becareful that in case of using a wildcard pattern to select a group of domains then the resolution field should be NONE and not DNS.
+One of the ServiceEntry I added to allow communications with Amazon SES. That needed also a VirtualService for that output service to correctly route the packets.
 
 ### The authentication interceptor
 The authentication interceptor is an Envoy filter that will make a request to the auth service and its in her turn should append the response headers with set_header or unset_header to the filter will add these header or remove them from the request that will continue to the target service (That of course if the auth service didn't returned any status code other than 200 or that response from auth service will return to the caller as it is).

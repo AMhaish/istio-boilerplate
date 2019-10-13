@@ -34,3 +34,36 @@ spec:
     protocol: HTTP
   resolution: NONE
   location: MESH_EXTERNAL
+##---
+# Allowing access to Amazon SES
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: smtp
+spec:
+  hosts:
+  - email-smtp.eu-west-1.amazonaws.com
+  ports:
+  - number: 465
+    name: tls
+    protocol: tcp
+  location: MESH_EXTERNAL
+##---
+# Amazon SES VirtualService
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+    name: sesservice
+spec:
+    hosts:
+    - email-smtp.eu-west-1.amazonaws.com
+    tcp:
+    - match:
+      - port: 465
+      route:
+      - destination:
+          host: email-smtp.eu-west-1.amazonaws.com
+          port:
+            number: 465
