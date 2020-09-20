@@ -1,3 +1,6 @@
+##---
+# Secret group to store MySQL access info encoded in Base64 format
+---
 apiVersion: v1
 kind: Secret
 metadata:
@@ -8,6 +11,9 @@ data:
   mysql-root-password: <encrypted password>
   mysql-user: <encrypted user>
   mysql-db: <encrypted database name>
+##---
+# Persistent Volume MySQL will use, here an actual storage space will be reserved, I am choosing 20GigaByte for disk-space with read write permissions
+# and using manual storage class name (mostly will be normal HDD disk), and define the host path under /mnt/mdata
 ---
 apiVersion: v1
 kind: PersistentVolume
@@ -23,6 +29,8 @@ spec:
     - ReadWriteOnce
   hostPath:
     path: "/mnt/data"
+##---
+# Persistent Volume Claim with its configuration, this is the claim that will link specific deployment with specific storage
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -35,6 +43,8 @@ spec:
   resources:
     requests:
       storage: 20Gi
+##---
+# Deploying headless service, a network entity that describes the MySQL service and on which port it will work on
 ---
 apiVersion: v1
 kind: Service
@@ -46,6 +56,9 @@ spec:
   selector:
     app: mysql
   clusterIP: None
+##---
+# Creating the deployment using an image from Docker hub and some database configuration, and linking the deployment with the storage claim to be able to access that storage
+# choosing also the monut point where MySQL pods can access the storage
 ---
 apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
 kind: Deployment

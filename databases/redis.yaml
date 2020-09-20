@@ -1,3 +1,6 @@
+##---
+# Deploying headless service, a network entity that describes the Redis service and on which port it will work on
+---
 apiVersion: v1
 kind: Service
 metadata:
@@ -14,7 +17,10 @@ spec:
     app: redis
     role: master
     tier: backend
+##---
+# Creating the deployment using an image from GCR repositories hub and some configuration
 ---
+apiVe
 apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
 kind: Deployment
 metadata:
@@ -44,6 +50,8 @@ spec:
             memory: 100Mi
         ports:
         - containerPort: 6379
+##---
+# (OptionL) Deploying headless service, a network entity that describes the Redis slave service and on which port it will work on
 ---
 apiVersion: v1
 kind: Service
@@ -60,6 +68,8 @@ spec:
     app: redis
     role: slave
     tier: backend
+##---
+# (Optional) Creating the deployment using an image from GCR repositories hub and some configuration
 ---
 apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
 kind: Deployment

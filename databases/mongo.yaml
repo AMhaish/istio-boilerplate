@@ -1,5 +1,5 @@
 ##---
-# Storage account that the MongoDB will use
+# Storage account that the MongoDB will use (The storage type), the type pd-ssd means that we will use SSD storage for the database
 ---
 apiVersion: v1
 kind: StorageClass
@@ -10,7 +10,8 @@ provisioner: kubernetes.io/gce-pd
 parameters:
   type: pd-ssd
 ##---
-# Persistent Volume MongoDB will use
+# Persistent Volume MongoDB will use, here an actual storage space will be reserved, I am choosing 20GigaByte for disk-space with read write permissions
+# and using the previous defined type, and define the host path under /mnt/mdata
 ---
 apiVersion: v1
 kind: PersistentVolume
@@ -27,7 +28,7 @@ spec:
   hostPath:
     path: "/mnt/mdata"
 ##---
-# Persistent Volume Claim with its configuration
+# Persistent Volume Claim with its configuration, this is the claim that will link specific deployment with specific storage
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -40,7 +41,7 @@ spec:
     requests:
       storage: 20Gi
 ##---
-# Deploying headless service
+# Deploying headless service, a network entity that describes the MongoDB service and on which port it will work on
 ---
 apiVersion: v1
 kind: Service
@@ -54,12 +55,9 @@ spec:
     targetPort: 27017
   selector:
     app: mongo
-  clusterIP: None
 ##---
-# Creating the deployment
----
-##---
-# Creating the deployment 
+# Creating the deployment using an image from Docker hub and some database configuration, and linking the deployment with the storage claim to be able to access that storage
+# choosing also the monut point where Mongo pods can access the storage
 ---
 apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
 kind: Deployment
