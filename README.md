@@ -1,29 +1,43 @@
+<img src="./pics/istio.png" alt="Istio" />
+
 # istio-boilerplate
 
-This project is a Istio configuration files template that can be used to kickstart an istio based Kubernates system.
-This boilerplate supports the most important entities that can be used like gateways, virtual services, databases services, deployments and volumes ... etc.
+This project is an Istio configuration files templates that can be used to kickstart an istio initial setup on Kubernates system.
+This boilerplate supports the most important entities that can be used like gateways, virtual services, deployments and volumes ... etc.
 Also it supports a basic template for implementing authentication interceptor for specific backend services.
+I added also some deployments for important databases.
 
 ## Some Concepts and Definitions
 
 ### Service
 
-A service definition is the configuration file that generates a Kubernates service inside the Kubernates cluster, we can define a name for a service, a port which the service works on and much more. Each service we has a deployment that configure how we are fethcing the container instances to deploy the service, how many pods we want to define for each service and much more.
-A volumes is defined in case there is a service that wants to store a presistant data.
+An abstract way to expose an application running on a set of Pods as a network service.
+A service definition is the configuration file that generates a Kubernates service inside the Kubernates cluster, we can define a name for a service, a port which the service works on and much more. K8 supports 4 types of services:
+- **ClusterIP**: Exposes the Service on a cluster-internal IP. Choosing this value makes the Service only reachable from within the cluster. This is the default ServiceType.
+- **NodePort**: Exposes the Service on each Node's IP at a static port (the NodePort). A ClusterIP Service, to which the NodePort Service routes, is automatically created. You'll be able to contact the NodePort Service, from outside the cluster, by requesting <NodeIP>:<NodePort>.
+- **LoadBalancer**: Exposes the Service externally using a cloud provider's load balancer.
+- **ExternalName**: Maps the Service to the contents of the externalName field (e.g. foo.bar.example.com), by returning a CNAME record with its value. No proxying of any kind is set up.
+
 You can return to Kubernates website for further info [https://kubernetes.io/docs/home/]
 
 ### Virtual Service
 
-A Virtual service in Istio defines a set of traffic routing rules to the internal services.
+A Virtual service in Istio defines a set of traffic routing rules to the internal services. Istio gateways will use these rules in order to understands how it should route the traffic to the correct service.
+Each Virtual Service should have a gateway defined in its configuration.
+You can add more rules on virtual service like the path pattern and DNS names that will cause the traffic to be routed to the current Virtual services that defines them.
+In services folder I added some example on creating some virtual services.
 
 ### Service Entries
 
 ServiceEntry enables adding additional entries into Istio’s internal service registry, so that auto-discovered services in the mesh can access/route to these manually specified services.
 A service entry describes the properties of a service (DNS name, VIPs, ports, protocols, endpoints). These services could be external to the mesh (e.g., web APIs) or mesh-internal services that are not part of the platform’s service registry (e.g., a set of VMs talking to services in Kubernetes).
+Inside services folder, in backendServices.yaml I added some examples on these service entries.
 
 ### Gateway
 
-Istio gateway is a load balancer that describes a set of ports to be exposed, the type of protocol to use and SNI configuration.
+Istio gateway is a load balancer that describes a set of ports to be exposed, the type of protocol to use and SNI configuration. Istio ingress controller is the main point to access the K8 cluster services, and it uses the defined gateways to understand the routing rules through gateways virtual services.
+Gateway can be attached to a specific DNS name or IP.
+Inside gateways folder I added a gateway configuration file template.
 
 ### Authentication Interceptor
 
@@ -33,7 +47,7 @@ Inside auth folder there is a template to configure the Envoy filter for custom 
 
 ## How to use these configuration files
 
-After setting up the mesh and installing Istio on it, the configurations in this repository can be applied by using kubectl command like next:
+After installing Istio, the configurations in this repository can be applied by using kubectl command like next:
 
 ```
 kubectl apply gateway.yaml
@@ -81,4 +95,4 @@ The authentication interceptor is an Envoy filter that will make a request to th
 
 ### Database instances
 
-Sometimes if you want to buildup a project that can be installed on-premise too, then it would be better to install databases inside the cluster, here in this boilerplate I created yaml files to configure Mongo, MySQL, Redis databases inside the cluster. You can find the configuration files inside databases folder. And I put some inline comments describing each section.
+Sometimes if you want to buildup a project that can be installed on-premise too, then it would be better to install databases inside the cluster, here in this boilerplate I created yaml files to configure Mongo, MySQL, Redis, Casandra, Elastisearch databases inside the cluster. You can find the configuration files inside databases folder. And I put some inline comments describing each section.

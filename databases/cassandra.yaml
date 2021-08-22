@@ -1,0 +1,115 @@
+##---
+# Persistent Volume Claim that the Cassandra will use
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cassandra-tracing-claim
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+   requests:
+    storage: 5Gi
+##---
+# The Cassandra service that will be used to access Cassandra database from a LoadBalancer IP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cassandra-service
+  labels:
+    app: cassandra
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 9042
+  selector:
+    app: cassandra
+##---
+# The Cassandra Stateful set
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: cassandra
+  labels:
+    app: cassandra
+spec:
+  serviceName: cassandra-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cassandra
+  template:
+    metadata:
+      labels:
+        app: cassandra
+    spec:
+      terminationGracePeriodSeconds: 1800
+      containers:
+      - name: cassandra
+        image: cassandra:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 7000
+          name: intra-node
+        - containerPort: 7001
+          name: tls-intra-node
+        - containerPort: 7199
+          name: jmx
+        - containerPort: 9042
+          name: cql
+        resources:
+          limits:
+            cpu: "500m"
+            memory: 1Gi
+          requests:
+            cpu: "500m"
+            memory: 1Gi
+        securityContext:
+          capabilities:
+            add:
+              - IPC_LOCK
+        lifecycle:
+          preStop:
+            exec:
+              command: 
+              - /bin/sh
+              - -c
+              - nodetool drain
+        env:
+          - name: MAX_HEAP_SIZE
+            value: 512M
+          - name: HEAP_NEWSIZE
+            value: 100M
+          - name: CASSANDRA_SEEDS
+            value: "cassandra-0.cassandra-service.tracing.svc.cluster.local"
+          - name: CASSANDRA_CLUSTER_NAME
+            value: "Tracing-Cassandra"
+          - name: CASSANDRA_DC
+            value: "DC1-Tracing-Cassandra"
+          - name: CASSANDRA_RACK
+            value: "Rack1-Tracing-Cassandra"
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+        readinessProbe:
+          exec:
+            command:
+            - /bin/bash
+            - -c
+            - /ready-probe.sh
+          initialDelaySeconds: 15
+          timeoutSeconds: 5
+        # These volume mounts are persistent. They are like inline claims,
+        # but not exactly because the names need to match exactly one of
+        # the stateful pod volumes.
+        volumeMounts:
+        - name: cassandra-tracing-claim
+          mountPath: /cassandra-tracing-claim
+      volumes:
+      - name: cassandra-tracing-claim
+        persistentVolumeClaim:
+            claimName: cassandra-tracing-claim

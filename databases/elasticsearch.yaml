@@ -1,0 +1,117 @@
+##---
+# Persistent Volume Claim that the Elasticsearch will use
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: elasticsearch-claim
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+   requests:
+    storage: 500Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: elasticsearch
+data:
+  elasticsearch.yml: |
+    cluster.name: "logging"
+    network.host: 0.0.0.0
+    discovery.zen.minimum_master_nodes: 1
+    node.max_local_storage_nodes: 1
+    xpack.security.enabled: true
+    xpack.monitoring.collection.enabled: true
+  role_mapping.yml: |
+---
+apiVersion: v1               
+kind: Service                
+metadata:                    
+  name: elasticsearch     
+  labels:                    
+    service: elasticsearch
+spec:                        
+  type: ClusterIP
+  selector:                   
+    service: elasticsearch
+  ports:                     
+  - name: http               
+    port: 9200               
+    targetPort: 9200
+    protocol: TCP            
+  - name: transport          
+    port: 9300               
+    targetPort: 9300
+    protocol: TCP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: elasticsearch
+  labels:
+    service: elasticsearch
+spec:
+  serviceName: elasticsearch
+  # Number of PODS
+  replicas: 1
+  selector:
+    matchLabels:
+      service: elasticsearch
+  template:
+    metadata:
+      labels:
+        service: elasticsearch
+    spec:
+      terminationGracePeriodSeconds: 15
+      initContainers:
+      # https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html
+      - name: increase-the-vm-max-map-count
+        image: busybox
+        command:
+        - sysctl
+        - -w
+        - vm.max_map_count=262144
+        securityContext:
+          privileged: true
+      containers:
+      - name: elasticsearch-logging
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.4.0
+        resources:
+          limits:
+            cpu: 2000m
+            memory: 4Gi
+          requests:
+            cpu: 100m
+            memory: 1Gi
+        ports:
+        - containerPort: 9200
+          name: http
+        - containerPort: 9300
+          name: tcp
+        env:
+          - name: cluster.name
+            value: "es"
+          - name: "TAKE_FILE_OWNERSHIP"
+            value: “1”
+          - name: discovery.type
+            value: "single-node"
+          - name: "xpack.security.enabled"
+            value: "true"
+        volumeMounts:
+        - name: elasticsearch-claim
+          mountPath: /usr/share/elasticsearch/data
+        - name: elasticsearch
+          mountPath: /usr/share/elasticsearch/config/elasticsearch.yml
+          subPath: elasticsearch.yml
+        - name: elasticsearch
+          mountPath: /usr/share/elasticsearch/config/role_mapping.yml
+          subPath: role_mapping.yml
+      volumes:
+      - name: elasticsearch-logging
+        persistentVolumeClaim:
+           claimName: elasticsearch-claim
+      - name: elasticsearch
+        configMap:
+            name: elasticsearch
